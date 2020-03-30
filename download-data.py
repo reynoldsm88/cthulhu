@@ -5,24 +5,13 @@ from os import mkdir
 from os.path import exists
 from shutil import rmtree
 
+import re
+
 import requests
 from bs4 import BeautifulSoup
 from ftfy import fix_text
 
 root_page = 'http://www.hplovecraft.com/writings/texts'
-
-
-# REPLACEMENT_RULES += ( ("([\u0000-\u0008]|[\u000B-\u001F])", "") )
-# REPLACEMENT_RULES += ( ("[\\p{Zl}][\\p{Zp}]", "\n") )
-# REPLACEMENT_RULES += ( ("\\{Cc}", "") )
-# REPLACEMENT_RULES += ( ("\\{Cf}", "") )
-# REPLACEMENT_RULES += ( ("\u0081", "") )
-# REPLACEMENT_RULES += ( ("\u008D", "") )
-# REPLACEMENT_RULES += ( ("\u008F", "") )
-# REPLACEMENT_RULES += ( ("\u0090", "") )
-# REPLACEMENT_RULES += ( ("\u009D", "") )
-# REPLACEMENT_RULES += ( ("\u00A0", "") )
-# REPLACEMENT_RULES += ( ("\u00AD", "") )
 
 def get_story_links() -> list:
     story_links = [ ]
@@ -60,7 +49,55 @@ def get_story_text( link ):
         for section in paragraphs:
             story += section.text
 
-    return fix_text( story )
+    return post_process( fix_text( story ) )
+
+
+def post_process( text: str ):
+    text = text.replace( u'\u2014', ' ' )
+    text = text.replace( '-', ' ' )
+
+    text = text.replace( u'\u0000', '' )
+    text = text.replace( u'\u0001', '' )
+    text = text.replace( u'\u0002', '' )
+    text = text.replace( u'\u0003', '' )
+    text = text.replace( u'\u0004', '' )
+    text = text.replace( u'\u0005', '' )
+    text = text.replace( u'\u0006', '' )
+    text = text.replace( u'\u0007', '' )
+    text = text.replace( u'\u0008', '' )
+
+    text = text.replace( u'\u000B', '' )
+    text = text.replace( u'\u000C', '' )
+    text = text.replace( u'\u000D', '' )
+    text = text.replace( u'\u000E', '' )
+    text = text.replace( u'\u000F', '' )
+    text = text.replace( u'\u0010', '' )
+    text = text.replace( u'\u0011', '' )
+    text = text.replace( u'\u0012', '' )
+    text = text.replace( u'\u0013', '' )
+    text = text.replace( u'\u0014', '' )
+    text = text.replace( u'\u0015', '' )
+    text = text.replace( u'\u0016', '' )
+    text = text.replace( u'\u0017', '' )
+    text = text.replace( u'\u0018', '' )
+    text = text.replace( u'\u0019', '' )
+    text = text.replace( u'\u0019', '' )
+    text = text.replace( u'\u001A', '' )
+    text = text.replace( u'\u001B', '' )
+    text = text.replace( u'\u001C', '' )
+    text = text.replace( u'\u001D', '' )
+    text = text.replace( u'\u001E', '' )
+    text = text.replace( u'\u001F', '' )
+
+    text = text.replace( u'\u0081', '' )
+    text = text.replace( u'\u008D', '' )
+    text = text.replace( u'\u008F', '' )
+    text = text.replace( u'\u0090', '' )
+    text = text.replace( u'\u009D', '' )
+    text = text.replace( u'\u00A0', '' )
+    text = text.replace( u'\u00AD', '' )
+
+    return re.sub( r'X{0,3}V{0,3}I{0,3}V{0,3}\.\n', '', text ).strip()
 
 
 def make_filename( title: str ) -> str:
