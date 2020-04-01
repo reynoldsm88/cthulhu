@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
+import re
 from multiprocessing import Pool
 from os import mkdir
 from os.path import exists
 from shutil import rmtree
-
-import re
 
 import requests
 from bs4 import BeautifulSoup
 from ftfy import fix_text
 
 root_page = 'http://www.hplovecraft.com/writings/texts'
+
 
 def get_story_links() -> list:
     story_links = [ ]
@@ -20,9 +20,9 @@ def get_story_links() -> list:
         html = response.text
         page = BeautifulSoup( html, "html.parser" )
 
-        links = page.find_all( "a", href = True )
-        for link in links:
-            if (link[ 'href' ].startswith( "fiction" )):
+        html_links = page.find_all( "a", href = True )
+        for link in html_links:
+            if link[ 'href' ].startswith( "fiction" ):
                 story = link.text
                 relative_path = link[ 'href' ]
                 href = f'{root_page}/{relative_path}'
@@ -107,7 +107,7 @@ def make_filename( title: str ) -> str:
 
 
 if __name__ == '__main__':
-    download_dir = 'data'
+    download_dir = '../data'
 
     if exists( download_dir ):
         print( 'removing existing data directory and getting data from scratch' )
