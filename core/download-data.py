@@ -49,10 +49,11 @@ def get_story_text( link ):
         for section in paragraphs:
             story += section.text
 
-    return post_process( fix_text( story ) )
+    return cleanup( fix_text( story ) )
 
 
-def post_process( text: str ):
+def cleanup( text: str ):
+    # get rid of all kinds of nasty unicode nonsense
     text = text.replace( u'\u2014', ' ' )
     text = text.replace( '-', ' ' )
 
@@ -97,6 +98,7 @@ def post_process( text: str ):
     text = text.replace( u'\u00A0', '' )
     text = text.replace( u'\u00AD', '' )
 
+    # remove the chapter headings
     return re.sub( r'X{0,3}V{0,3}I{0,3}V{0,3}\.\n', '', text ).strip()
 
 
@@ -107,7 +109,11 @@ def make_filename( title: str ) -> str:
 
 
 if __name__ == '__main__':
-    download_dir = '../data'
+    data_dir = "data"
+    download_dir = f"{data_dir}/raw"
+
+    if not exists( data_dir ):
+        mkdir( data_dir )
 
     if exists( download_dir ):
         print( 'removing existing data directory and getting data from scratch' )
