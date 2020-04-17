@@ -6,6 +6,8 @@ from os import mkdir
 from os.path import exists
 from shutil import rmtree
 
+from core.common import raw_data_dir, inputln
+
 import requests
 from bs4 import BeautifulSoup
 from ftfy import fix_text
@@ -36,7 +38,7 @@ def write_story( story ):
     filename = make_filename( title )
     raw_text = get_story_text( link )
 
-    with open( f'{download_dir}/{filename}', "w+" ) as file:
+    with open( f'{raw_data_dir}/{filename}', "w+" ) as file:
         file.write( raw_text )
 
 
@@ -99,7 +101,9 @@ def cleanup( text: str ):
     text = text.replace( u'\u00AD', '' )
 
     # remove the chapter headings
-    return re.sub( r'X{0,3}V{0,3}I{0,3}V{0,3}\.\n', '', text ).strip()
+    text = re.sub( r'X{0,3}V{0,3}I{0,3}V{0,3}\.\n', '', text )
+    text = re.sub( r'http(s)?:.*\w', '', text ).strip()
+    return text
 
 
 def make_filename( title: str ) -> str:
@@ -108,20 +112,37 @@ def make_filename( title: str ) -> str:
     return fix_text( f'{formatted}.txt' )
 
 
-if __name__ == '__main__':
-    data_dir = "data"
-    download_dir = f"{data_dir}/raw"
-
-    if not exists( data_dir ):
-        mkdir( data_dir )
-
-    if exists( download_dir ):
-        print( 'removing existing data directory and getting data from scratch' )
-        rmtree( download_dir )
-
-    mkdir( download_dir )
-
+def do_download():
     links = get_story_links()
 
     pool = Pool( 16 )
     pool.map( write_story, links )
+
+
+def confirm_loop():
+    i = input( 'the data already exists, would you like to redownload? y or n' )
+    if i not in [ 'y', 'n' ]:
+        confirm_loop()
+    elif i is 'y':
+        do_download()
+    else:
+        print( 'will not redownload data' )
+        exit()
+
+
+if __name__ == '__main__':
+    def confirm_loop():
+        i = inputln( 'the data already exists, would you like to redownload? y or n' )
+        if i not in [ 'y', 'n' ]:
+            confirm_loop()
+        elif i is 'y':
+            do_download()
+        else:
+            print( 'will not redownload data' )
+            exit()
+
+
+    if exists( raw_data_dir ):
+        confirm_loop()
+    else:
+        do_download()
