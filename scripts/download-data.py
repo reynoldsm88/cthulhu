@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
-import re
 from multiprocessing import Pool
-from os import mkdir
 from os.path import exists
-from shutil import rmtree
-
-from core.common import raw_data_dir, inputln
 
 import requests
 from bs4 import BeautifulSoup
 from ftfy import fix_text
+
+from os import mkdir
+
+from shutil import rmtree
+
+from core.common import raw_data_dir, confirm_loop
 
 root_page = 'http://www.hplovecraft.com/writings/texts'
 
@@ -51,59 +52,7 @@ def get_story_text( link ):
         for section in paragraphs:
             story += section.text
 
-    return cleanup( fix_text( story ) )
-
-
-def cleanup( text: str ):
-    # get rid of all kinds of nasty unicode nonsense
-    text = text.replace( u'\u2014', ' ' )
-    text = text.replace( '-', ' ' )
-
-    text = text.replace( u'\u0000', '' )
-    text = text.replace( u'\u0001', '' )
-    text = text.replace( u'\u0002', '' )
-    text = text.replace( u'\u0003', '' )
-    text = text.replace( u'\u0004', '' )
-    text = text.replace( u'\u0005', '' )
-    text = text.replace( u'\u0006', '' )
-    text = text.replace( u'\u0007', '' )
-    text = text.replace( u'\u0008', '' )
-
-    text = text.replace( u'\u000B', '' )
-    text = text.replace( u'\u000C', '' )
-    text = text.replace( u'\u000D', '' )
-    text = text.replace( u'\u000E', '' )
-    text = text.replace( u'\u000F', '' )
-    text = text.replace( u'\u0010', '' )
-    text = text.replace( u'\u0011', '' )
-    text = text.replace( u'\u0012', '' )
-    text = text.replace( u'\u0013', '' )
-    text = text.replace( u'\u0014', '' )
-    text = text.replace( u'\u0015', '' )
-    text = text.replace( u'\u0016', '' )
-    text = text.replace( u'\u0017', '' )
-    text = text.replace( u'\u0018', '' )
-    text = text.replace( u'\u0019', '' )
-    text = text.replace( u'\u0019', '' )
-    text = text.replace( u'\u001A', '' )
-    text = text.replace( u'\u001B', '' )
-    text = text.replace( u'\u001C', '' )
-    text = text.replace( u'\u001D', '' )
-    text = text.replace( u'\u001E', '' )
-    text = text.replace( u'\u001F', '' )
-
-    text = text.replace( u'\u0081', '' )
-    text = text.replace( u'\u008D', '' )
-    text = text.replace( u'\u008F', '' )
-    text = text.replace( u'\u0090', '' )
-    text = text.replace( u'\u009D', '' )
-    text = text.replace( u'\u00A0', '' )
-    text = text.replace( u'\u00AD', '' )
-
-    # remove the chapter headings
-    text = re.sub( r'X{0,3}V{0,3}I{0,3}V{0,3}\.\n', '', text )
-    text = re.sub( r'http(s)?:.*\w', '', text ).strip()
-    return text
+    return story
 
 
 def make_filename( title: str ) -> str:
@@ -113,36 +62,16 @@ def make_filename( title: str ) -> str:
 
 
 def do_download():
-    links = get_story_links()
+    if exists( raw_data_dir ):
+        rmtree( raw_data_dir )
 
-    pool = Pool( 16 )
-    pool.map( write_story, links )
-
-
-def confirm_loop():
-    i = input( 'the data already exists, would you like to redownload? y or n' )
-    if i not in [ 'y', 'n' ]:
-        confirm_loop()
-    elif i is 'y':
-        do_download()
-    else:
-        print( 'will not redownload data' )
-        exit()
+    mkdir( raw_data_dir )
+    [ write_story( link ) for link in get_story_links() ]
 
 
 if __name__ == '__main__':
-    def confirm_loop():
-        i = inputln( 'the data already exists, would you like to redownload? y or n' )
-        if i not in [ 'y', 'n' ]:
-            confirm_loop()
-        elif i is 'y':
-            do_download()
-        else:
-            print( 'will not redownload data' )
-            exit()
-
 
     if exists( raw_data_dir ):
-        confirm_loop()
+        confirm_loop( f"the directory {raw_data_dir} already exists, would you like to overwrite?", do_download )
     else:
         do_download()
